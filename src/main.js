@@ -34,13 +34,15 @@ async function search(event) {
     await getImages(query, pageNumber)
         .then(images => {
             loading.classList.toggle('visually-hidden');
+            if (images.totalHits === 0) {return}
             imagesList.innerHTML = '';
-            imagesList.insertAdjacentHTML("beforeend", render(images.hits)); 
+            imagesList.insertAdjacentHTML("beforeend", render(images.hits));
             lightbox.refresh();
 
             if (loadMoreButton.classList.contains('visually-hidden')) {
                 loadMoreButton.classList.toggle('visually-hidden');
             }
+            limitCheck(images);
         })
         .catch (error => {
         console.log(error);
@@ -56,16 +58,8 @@ async function loadMore() {
             loading.classList.toggle('visually-hidden');
             imagesList.insertAdjacentHTML("beforeend", render(images.hits));
             lightbox.refresh();
-
-            if (images.totalHits < pageNumber * 15) {
-                iziToast.info({
-                message: "We're sorry, but you've reached the end of search results.",
-                });
-                loadMoreButton.classList.toggle('visually-hidden');
-            }
-            else {
-                scroll()
-            }
+            limitCheck(images);
+            scroll()
         })
         .catch (error => {
             console.log(error);
@@ -75,4 +69,13 @@ async function loadMore() {
 async function scroll() {
     const galleryItem = document.querySelector('.images-list-item');
     window.scrollBy({ top: galleryItem.getBoundingClientRect().height * 2, behavior: 'smooth' });
+}
+
+async function limitCheck(images) {
+    if (images.totalHits < pageNumber * 15 && images.totalHits !== 0) {
+        iziToast.info({
+        message: "We're sorry, but you've reached the end of search results.",
+        });
+        loadMoreButton.classList.toggle('visually-hidden');
+        } 
 }
